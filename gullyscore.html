@@ -924,15 +924,15 @@
               ({ballsToOvers(innings.balls)})
             </div>
             
-            {state.currentInnings === 2 && (
+            {state.currentInnings === 2 && state.status !== 'COMPLETED' && (
               <div className="text-amber" style={{marginTop: '12px', fontWeight: 'bold'}}>
-                Need {state.innings1.runs + 1 - innings.runs} off {(setup.overs * 6) - innings.balls} balls
+                Need {Math.max(0, state.innings1.runs + 1 - innings.runs)} off {(setup.overs * 6) - innings.balls} balls
               </div>
             )}
             
             <div className="flex-row justify-between text-muted" style={{marginTop: '16px', fontSize: '0.9rem', padding: '0 10px'}}>
               <span>CRR: {innings.balls > 0 ? (innings.runs / (innings.balls / 6)).toFixed(2) : '0.00'}</span>
-              {state.currentInnings === 2 && (
+              {state.currentInnings === 2 && state.status !== 'COMPLETED' && (
                 <span>RRR: {((state.innings1.runs + 1 - innings.runs) / Math.max(0.16, ((setup.overs * 6) - innings.balls) / 6)).toFixed(2)}</span>
               )}
             </div>
@@ -993,32 +993,43 @@
              </div>
           </div>
 
-          {/* Scoring Grid */}
-          <div className="scoring-grid">
-            <button className="action-btn" onClick={() => handleScore('0')}>0</button>
-            <button className="action-btn" onClick={() => handleScore('1')}>1</button>
-            <button className="action-btn" onClick={() => handleScore('2')}>2</button>
-            <button className="action-btn" onClick={() => handleScore('3')}>3</button>
-            
-            <button className="action-btn boundary" onClick={() => handleScore('4')}>4</button>
-            <button className="action-btn" onClick={() => handleScore('5')}>5</button>
-            <button className="action-btn boundary" onClick={() => handleScore('6')}>6</button>
-            <button className="action-btn wicket" onClick={() => handleScore('W')}>W</button>
-            
-            <button className="action-btn extra" onClick={() => handleScore('WD')}>WD</button>
-            <button className="action-btn extra" onClick={() => handleScore('NB')}>NB</button>
-            <button className="action-btn extra" onClick={() => handleScore('LB')}>LB</button>
-            <button className="action-btn extra" onClick={() => handleScore('B')}>B</button>
-          </div>
-          
-          <div className="scoring-grid" style={{marginTop: '12px'}}>
-             <button className="action-btn extra" style={{fontSize: '1rem'}} onClick={() => handleScore('WD+1')}>WD+1</button>
-             <button className="action-btn extra" style={{fontSize: '1rem'}} onClick={() => handleScore('WD+2')}>WD+2</button>
-             <button className="action-btn extra" style={{fontSize: '1rem'}} onClick={() => handleScore('NB+1')}>NB+1</button>
-             <button className="action-btn extra" style={{fontSize: '1rem'}} onClick={() => handleScore('NB+4')}>NB+4</button>
-             <button className="action-btn extra" style={{fontSize: '1rem'}} onClick={() => handleScore('NB+6')}>NB+6</button>
-             <button className="action-btn" style={{fontSize: '1.2rem'}} onClick={() => handleScore('UNDO')} disabled={!state.history || state.history.length === 0}>↩</button>
-          </div>
+          {state.status === 'COMPLETED' ? (
+             <div className="glass-card text-center" style={{marginTop: '24px', padding: '24px', border: '1px solid var(--accent-primary)'}}>
+               <h2 className="text-green" style={{marginBottom: '12px'}}>Match Completed! 🏆</h2>
+               <p className="text-muted" style={{marginBottom: '20px'}}>The innings has concluded. Check the final results.</p>
+               <button className="btn-primary w-full" onClick={() => setState(prev => ({...prev, ui: {...prev.ui, activeTab: 'SUMMARY'}}))}>View Match Summary</button>
+               <button className="action-btn w-full" style={{marginTop: '12px'}} onClick={() => handleScore('UNDO')} disabled={!state.history || state.history.length === 0}>↩ Undo Last Ball</button>
+             </div>
+          ) : (
+            <>
+              {/* Scoring Grid */}
+              <div className="scoring-grid">
+                <button className="action-btn" onClick={() => handleScore('0')}>0</button>
+                <button className="action-btn" onClick={() => handleScore('1')}>1</button>
+                <button className="action-btn" onClick={() => handleScore('2')}>2</button>
+                <button className="action-btn" onClick={() => handleScore('3')}>3</button>
+                
+                <button className="action-btn boundary" onClick={() => handleScore('4')}>4</button>
+                <button className="action-btn" onClick={() => handleScore('5')}>5</button>
+                <button className="action-btn boundary" onClick={() => handleScore('6')}>6</button>
+                <button className="action-btn wicket" onClick={() => handleScore('W')}>W</button>
+                
+                <button className="action-btn extra" onClick={() => handleScore('WD')}>WD</button>
+                <button className="action-btn extra" onClick={() => handleScore('NB')}>NB</button>
+                <button className="action-btn extra" onClick={() => handleScore('LB')}>LB</button>
+                <button className="action-btn extra" onClick={() => handleScore('B')}>B</button>
+              </div>
+              
+              <div className="scoring-grid" style={{marginTop: '12px'}}>
+                 <button className="action-btn extra" style={{fontSize: '1rem'}} onClick={() => handleScore('WD+1')}>WD+1</button>
+                 <button className="action-btn extra" style={{fontSize: '1rem'}} onClick={() => handleScore('WD+2')}>WD+2</button>
+                 <button className="action-btn extra" style={{fontSize: '1rem'}} onClick={() => handleScore('NB+1')}>NB+1</button>
+                 <button className="action-btn extra" style={{fontSize: '1rem'}} onClick={() => handleScore('NB+4')}>NB+4</button>
+                 <button className="action-btn extra" style={{fontSize: '1rem'}} onClick={() => handleScore('NB+6')}>NB+6</button>
+                 <button className="action-btn" style={{fontSize: '1.2rem'}} onClick={() => handleScore('UNDO')} disabled={!state.history || state.history.length === 0}>↩</button>
+              </div>
+            </>
+          )}
         </div>
       );
     }
