@@ -770,6 +770,12 @@ import './index.css';
       const handleNext = () => {
         if (!newBatter) { alert('Enter new batter name'); return; }
         
+        const currInnKey = state.currentInnings === 1 ? 'innings1' : 'innings2';
+        if (state[currInnKey].batters.some(b => b.name.toLowerCase() === newBatter.toLowerCase())) {
+          alert('This player has already batted!');
+          return;
+        }
+
         setState(prev => {
           const currInnKey = prev.currentInnings === 1 ? 'innings1' : 'innings2';
           const inn = structuredClone(prev[currInnKey]);
