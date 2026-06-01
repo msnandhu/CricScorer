@@ -525,11 +525,13 @@ import './index.css';
 
         setState(prev => {
           // Save history for undo
-          const history = prev.history ? [...prev.history, structuredClone()] : [structuredClone()];
+          const snapshot = structuredClone(prev);
+          delete snapshot.history;
+          const history = prev.history ? [...prev.history, snapshot] : [snapshot];
           if(history.length > 10) history.shift(); // Keep last 10 actions
 
           const currInnKey = prev.currentInnings === 1 ? 'innings1' : 'innings2';
-          const inn = structuredClone();
+          const inn = structuredClone(prev[currInnKey]);
           let newStatus = prev.status;
 
           let isLegalBall = true;
@@ -595,6 +597,9 @@ import './index.css';
 
           // Change Strike logic
           let runsRan = runsToBatter + (extras.lb || 0) + (extras.b || 0);
+          if (action.startsWith('WD+')) {
+              runsRan += parseInt(action.split('+')[1]);
+          }
           let swapStrike = runsRan % 2 !== 0;
 
           // Over complete
