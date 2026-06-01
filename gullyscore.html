@@ -11,8 +11,8 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
   
   <!-- CDNs -->
-  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -825,11 +825,11 @@
 
         setState(prev => {
           // Save history for undo
-          const history = prev.history ? [...prev.history, JSON.parse(JSON.stringify({...prev, history: undefined}))] : [JSON.parse(JSON.stringify({...prev, history: undefined}))];
+          const history = prev.history ? [...prev.history, structuredClone()] : [structuredClone()];
           if(history.length > 10) history.shift(); // Keep last 10 actions
 
           const currInnKey = prev.currentInnings === 1 ? 'innings1' : 'innings2';
-          const inn = JSON.parse(JSON.stringify(prev[currInnKey]));
+          const inn = structuredClone();
           let newStatus = prev.status;
 
           let isLegalBall = true;
@@ -1067,7 +1067,7 @@
         
         setState(prev => {
           const currInnKey = prev.currentInnings === 1 ? 'innings1' : 'innings2';
-          const inn = JSON.parse(JSON.stringify(prev[currInnKey]));
+          const inn = structuredClone();
           
           // Mark old batter out
           inn.batters[inn.currentStrikerIdx].dismissal = dismissalType;
@@ -1120,7 +1120,7 @@
         
         setState(prev => {
           const currInnKey = prev.currentInnings === 1 ? 'innings1' : 'innings2';
-          const inn = JSON.parse(JSON.stringify(prev[currInnKey]));
+          const inn = structuredClone();
           
           let bowlerIdx = inn.bowlers.findIndex(b => b.name.toLowerCase() === newBowler.toLowerCase());
           if (bowlerIdx === -1) {
@@ -1169,7 +1169,7 @@
 
       const handleSave = () => {
          setState(prev => {
-            const next = JSON.parse(JSON.stringify(prev));
+            const next = structuredClone();
             next[currInnKey].runs = parseInt(runs) || 0;
             next[currInnKey].wickets = parseInt(wickets) || 0;
             next[currInnKey].balls = parseInt(balls) || 0;
@@ -1214,7 +1214,7 @@
       const handleSave = () => {
         if (!name) return;
         setState(prev => {
-          const next = JSON.parse(JSON.stringify(prev));
+          const next = structuredClone();
           const tIdx = isStriker ? next[currInnKey].currentStrikerIdx : next[currInnKey].currentNonStrikerIdx;
           next[currInnKey].batters[tIdx] = { ...next[currInnKey].batters[tIdx], name, runs: parseInt(runs)||0, balls: parseInt(balls)||0, fours: parseInt(fours)||0, sixes: parseInt(sixes)||0 };
           next.ui.editBatter = false;
@@ -1258,7 +1258,7 @@
       const handleSave = () => {
         if (!name) return;
         setState(prev => {
-          const next = JSON.parse(JSON.stringify(prev));
+          const next = structuredClone();
           let bIdx = next[currInnKey].currentBowlerIdx;
           next[currInnKey].bowlers[bIdx] = { ...next[currInnKey].bowlers[bIdx], name, overs: parseInt(overs)/6 || 0, runs: parseInt(runs)||0, wickets: parseInt(wickets)||0 };
           next.ui.editBowler = false;
@@ -1297,7 +1297,7 @@
 
       const handleSave = () => {
          setState(prev => {
-            const next = JSON.parse(JSON.stringify(prev));
+            const next = structuredClone();
             if(next[currInnKey].timeline.length > 0) {
                next[currInnKey].timeline[lastOverIdx] = overStr.split(',').map(s => s.trim()).filter(Boolean);
             }
