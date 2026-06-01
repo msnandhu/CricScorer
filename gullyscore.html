@@ -913,7 +913,7 @@
       return (
         <div className="animate-fade-up">
           {/* Top Bar */}
-          <div className="glass-card text-center" style={{padding: '20px'}}>
+          <div className="glass-card text-center" style={{padding: '20px', cursor: 'pointer'}} onClick={() => setState(prev => ({...prev, ui: {...prev.ui, editScore: true}}))}>
             <div className="text-muted" style={{fontSize: '0.9rem', marginBottom: '8px'}}>
               {innings.battingTeam} • Innings {state.currentInnings}
             </div>
@@ -940,7 +940,7 @@
 
           {/* Batters */}
           <div className="flex-row gap-3">
-            <div className="glass-card w-full" style={{border: striker ? '1px solid var(--accent-primary)' : ''}}>
+            <div className="glass-card w-full" style={{border: striker ? '1px solid var(--accent-primary)' : '', cursor: 'pointer'}} onClick={() => setState(prev => ({...prev, ui: {...prev.ui, editBatter: 'striker'}}))}>
               <div className="flex-row justify-between" style={{marginBottom: '8px'}}>
                 <span style={{fontWeight: 'bold'}}>{striker?.name} {striker && '*'}</span>
               </div>
@@ -953,7 +953,7 @@
               </div>
             </div>
             
-            <div className="glass-card w-full" style={{border: nonStriker ? '1px solid transparent' : ''}}>
+            <div className="glass-card w-full" style={{border: nonStriker ? '1px solid transparent' : '', cursor: 'pointer'}} onClick={() => setState(prev => ({...prev, ui: {...prev.ui, editBatter: 'nonStriker'}}))}>
                <div className="flex-row justify-between" style={{marginBottom: '8px'}}>
                 <span>{nonStriker?.name}</span>
               </div>
@@ -968,7 +968,7 @@
           </div>
 
           {/* Bowler */}
-          <div className="glass-card">
+          <div className="glass-card" style={{cursor: 'pointer'}} onClick={() => setState(prev => ({...prev, ui: {...prev.ui, editBowler: true}}))}>
             <div className="flex-row justify-between">
               <span className="text-amber" style={{fontWeight: 'bold'}}>{bowler?.name} •</span>
               <span style={{fontWeight: 'bold'}}>{bowler?.wickets}-{bowler?.runs} <span className="text-muted">({ballsToOvers(Math.round(bowler?.overs * 6) || 0)})</span></span>
@@ -980,7 +980,7 @@
           </div>
 
           {/* Over Strip */}
-          <div className="glass-card" style={{padding: '12px 16px'}}>
+          <div className="glass-card" style={{padding: '12px 16px', cursor: 'pointer'}} onClick={() => setState(prev => ({...prev, ui: {...prev.ui, editTimeline: true}}))}>
              <div className="text-muted" style={{fontSize: '0.8rem', marginBottom: '8px'}}>This Over</div>
              <div className="over-strip">
                {currentOver.length === 0 ? <span className="text-muted" style={{fontStyle: 'italic'}}>Waiting for first ball...</span> : 
@@ -1124,72 +1124,165 @@
       );
     }
 
-    function ChangeBowlerModal({ state, setState }) {
-      const [newBowler, setNewBowler] = useState('');
+    function EditScoreModal({ state, setState }) {
+      const currInnKey = state.currentInnings === 1 ? 'innings1' : 'innings2';
+      const inn = state[currInnKey];
       
-      const handleNext = () => {
-        if (!newBowler) return;
-        
+      const [runs, setRuns] = useState(inn.runs);
+      const [wickets, setWickets] = useState(inn.wickets);
+      const [balls, setBalls] = useState(inn.balls);
+
+      const handleSave = () => {
+         setState(prev => {
+            const next = JSON.parse(JSON.stringify(prev));
+            next[currInnKey].runs = parseInt(runs) || 0;
+            next[currInnKey].wickets = parseInt(wickets) || 0;
+            next[currInnKey].balls = parseInt(balls) || 0;
+            next.ui.editScore = false;
+            return next;
+         });
+      };
+
+      return (
+         <div className="modal-overlay">
+           <div className="modal-content">
+             <h2 className="text-amber" style={{marginBottom: '16px'}}>Edit Team Score</h2>
+             <label className="text-muted">Total Runs</label>
+             <input type="number" value={runs} onChange={e => setRuns(e.target.value)} />
+             <label className="text-muted">Total Wickets</label>
+             <input type="number" value={wickets} onChange={e => setWickets(e.target.value)} />
+             <label className="text-muted">Total Legal Balls</label>
+             <input type="number" value={balls} onChange={e => setBalls(e.target.value)} />
+             
+             <div className="flex-row gap-3" style={{marginTop: '24px'}}>
+                <button className="action-btn flex-1" onClick={() => setState(prev => ({...prev, ui: {...prev.ui, editScore: false}}))}>Cancel</button>
+                <button className="btn-primary flex-1" onClick={handleSave}>Save</button>
+             </div>
+           </div>
+         </div>
+      );
+    }
+
+    function EditBatterModal({ state, setState }) {
+      const currInnKey = state.currentInnings === 1 ? 'innings1' : 'innings2';
+      const inn = state[currInnKey];
+      const isStriker = state.ui.editBatter === 'striker';
+      const targetIdx = isStriker ? inn.currentStrikerIdx : inn.currentNonStrikerIdx;
+      const batter = inn.batters[targetIdx];
+      
+      const [name, setName] = useState(batter?.name || '');
+      const [runs, setRuns] = useState(batter?.runs || 0);
+      const [balls, setBalls] = useState(batter?.balls || 0);
+      const [fours, setFours] = useState(batter?.fours || 0);
+      const [sixes, setSixes] = useState(batter?.sixes || 0);
+
+      const handleSave = () => {
+        if (!name) return;
         setState(prev => {
-          const currInnKey = prev.currentInnings === 1 ? 'innings1' : 'innings2';
-          const inn = JSON.parse(JSON.stringify(prev[currInnKey]));
-          
-          let bowlerIdx = inn.bowlers.findIndex(b => b.name.toLowerCase() === newBowler.toLowerCase());
-          if (bowlerIdx === -1) {
-            inn.bowlers.push({ id: Date.now(), name: newBowler, overs: 0, runs: 0, wickets: 0, maidens: 0, dots: 0 });
-            bowlerIdx = inn.bowlers.length - 1;
-          }
-          inn.currentBowlerIdx = bowlerIdx;
-          return { ...prev, ui: { ...prev.ui, changeBowler: false }, [currInnKey]: inn };
+          const next = JSON.parse(JSON.stringify(prev));
+          const tIdx = isStriker ? next[currInnKey].currentStrikerIdx : next[currInnKey].currentNonStrikerIdx;
+          next[currInnKey].batters[tIdx] = { ...next[currInnKey].batters[tIdx], name, runs: parseInt(runs)||0, balls: parseInt(balls)||0, fours: parseInt(fours)||0, sixes: parseInt(sixes)||0 };
+          next.ui.editBatter = false;
+          return next;
         });
       };
 
       return (
         <div className="modal-overlay">
           <div className="modal-content">
-            <h2 className="text-amber" style={{marginBottom: '16px'}}>Change Bowler</h2>
-            <label className="text-muted">New Bowler Name</label>
-            <input type="text" placeholder="Bowler Name" value={newBowler} onChange={e => setNewBowler(e.target.value)} />
+            <h2 className="text-green" style={{marginBottom: '16px'}}>Edit Batter</h2>
+            <label className="text-muted">Batter Name</label>
+            <input type="text" value={name} onChange={e => setName(e.target.value)} />
+            <div className="flex-row gap-3">
+               <div><label className="text-muted">Runs</label><input type="number" value={runs} onChange={e => setRuns(e.target.value)} /></div>
+               <div><label className="text-muted">Balls</label><input type="number" value={balls} onChange={e => setBalls(e.target.value)} /></div>
+            </div>
+            <div className="flex-row gap-3">
+               <div><label className="text-muted">4s</label><input type="number" value={fours} onChange={e => setFours(e.target.value)} /></div>
+               <div><label className="text-muted">6s</label><input type="number" value={sixes} onChange={e => setSixes(e.target.value)} /></div>
+            </div>
+            <div className="flex-row gap-3" style={{marginTop: '24px'}}>
+               <button className="action-btn flex-1" onClick={() => setState(prev => ({...prev, ui: {...prev.ui, editBatter: false}}))}>Cancel</button>
+               <button className="btn-primary flex-1" onClick={handleSave}>Save</button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function EditBowlerModal({ state, setState }) {
+      const currInnKey = state.currentInnings === 1 ? 'innings1' : 'innings2';
+      const inn = state[currInnKey];
+      const bowler = inn.bowlers[inn.currentBowlerIdx];
+      
+      const [name, setName] = useState(bowler?.name || '');
+      const [overs, setOvers] = useState(Math.round(bowler?.overs * 6) || 0); // using balls
+      const [runs, setRuns] = useState(bowler?.runs || 0);
+      const [wickets, setWickets] = useState(bowler?.wickets || 0);
+
+      const handleSave = () => {
+        if (!name) return;
+        setState(prev => {
+          const next = JSON.parse(JSON.stringify(prev));
+          let bIdx = next[currInnKey].currentBowlerIdx;
+          next[currInnKey].bowlers[bIdx] = { ...next[currInnKey].bowlers[bIdx], name, overs: parseInt(overs)/6 || 0, runs: parseInt(runs)||0, wickets: parseInt(wickets)||0 };
+          next.ui.editBowler = false;
+          return next;
+        });
+      };
+
+      return (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h2 className="text-amber" style={{marginBottom: '16px'}}>Edit Bowler</h2>
+            <label className="text-muted">Bowler Name</label>
+            <input type="text" value={name} onChange={e => setName(e.target.value)} />
+            <div className="flex-row gap-3">
+               <div><label className="text-muted">Runs</label><input type="number" value={runs} onChange={e => setRuns(e.target.value)} /></div>
+               <div><label className="text-muted">Wickets</label><input type="number" value={wickets} onChange={e => setWickets(e.target.value)} /></div>
+            </div>
+            <label className="text-muted">Balls Bowled</label>
+            <input type="number" value={overs} onChange={e => setOvers(e.target.value)} />
             
             <div className="flex-row gap-3" style={{marginTop: '24px'}}>
-               <button className="action-btn flex-1" onClick={() => setState(prev => ({...prev, ui: {...prev.ui, changeBowler: false}}))}>Cancel</button>
-               <button className="btn-primary flex-1" onClick={handleNext}>Save</button>
+               <button className="action-btn flex-1" onClick={() => setState(prev => ({...prev, ui: {...prev.ui, editBowler: false}}))}>Cancel</button>
+               <button className="btn-primary flex-1" onClick={handleSave}>Save</button>
             </div>
           </div>
         </div>
       );
     }
     
-    function ChangeBatterModal({ state, setState, isStriker }) {
-      const [newBatter, setNewBatter] = useState('');
+    function EditTimelineModal({ state, setState }) {
+      const currInnKey = state.currentInnings === 1 ? 'innings1' : 'innings2';
+      const inn = state[currInnKey];
+      const lastOverIdx = inn.timeline.length > 0 ? inn.timeline.length - 1 : 0;
       
-      const handleNext = () => {
-        if (!newBatter) return;
-        
-        setState(prev => {
-          const currInnKey = prev.currentInnings === 1 ? 'innings1' : 'innings2';
-          const inn = JSON.parse(JSON.stringify(prev[currInnKey]));
-          
-          let targetIdx = isStriker ? inn.currentStrikerIdx : inn.currentNonStrikerIdx;
-          inn.batters[targetIdx].name = newBatter; // Simple rename
-          
-          return { ...prev, ui: { ...prev.ui, changeStriker: false, changeNonStriker: false }, [currInnKey]: inn };
-        });
-      };
+      const [overStr, setOverStr] = useState(inn.timeline[lastOverIdx]?.join(',') || '');
 
+      const handleSave = () => {
+         setState(prev => {
+            const next = JSON.parse(JSON.stringify(prev));
+            if(next[currInnKey].timeline.length > 0) {
+               next[currInnKey].timeline[lastOverIdx] = overStr.split(',').map(s => s.trim()).filter(Boolean);
+            }
+            next.ui.editTimeline = false;
+            return next;
+         });
+      };
+      
       return (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h2 className="text-green" style={{marginBottom: '16px'}}>Edit Batter Name</h2>
-            <label className="text-muted">Batter Name</label>
-            <input type="text" placeholder="Batter Name" value={newBatter} onChange={e => setNewBatter(e.target.value)} />
-            
-            <div className="flex-row gap-3" style={{marginTop: '24px'}}>
-               <button className="action-btn flex-1" onClick={() => setState(prev => ({...prev, ui: {...prev.ui, changeStriker: false, changeNonStriker: false}}))}>Cancel</button>
-               <button className="btn-primary flex-1" onClick={handleNext}>Save</button>
-            </div>
-          </div>
-        </div>
+         <div className="modal-overlay">
+           <div className="modal-content">
+             <h2 className="text-green" style={{marginBottom: '16px'}}>Edit Current Over Balls</h2>
+             <p className="text-muted" style={{fontSize: '0.8rem', marginBottom: '8px'}}>Comma separated (e.g. 1,W,wd,4)</p>
+             <input type="text" value={overStr} onChange={e => setOverStr(e.target.value)} />
+             <div className="flex-row gap-3" style={{marginTop: '24px'}}>
+                <button className="action-btn flex-1" onClick={() => setState(prev => ({...prev, ui: {...prev.ui, editTimeline: false}}))}>Cancel</button>
+                <button className="btn-primary flex-1" onClick={handleSave}>Save</button>
+             </div>
+           </div>
+         </div>
       );
     }
 
@@ -1251,6 +1344,10 @@
           <MainApp state={state} setState={setState} />
           {state.status === 'WICKET_FALL' && <WicketModal state={state} setState={setState} />}
           {state.status === 'OVER_COMPLETE' && <OverCompleteModal state={state} setState={setState} />}
+          {state.ui?.editScore && <EditScoreModal state={state} setState={setState} />}
+          {state.ui?.editBatter && <EditBatterModal state={state} setState={setState} />}
+          {state.ui?.editBowler && <EditBowlerModal state={state} setState={setState} />}
+          {state.ui?.editTimeline && <EditTimelineModal state={state} setState={setState} />}
         </>
       );
     }
