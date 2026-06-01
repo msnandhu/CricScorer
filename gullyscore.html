@@ -480,10 +480,22 @@
     }
 
     function InningsTab({ state }) {
-      const inn = state.currentInnings === 1 ? state.innings1 : state.innings2;
+      const [viewInnNum, setViewInnNum] = useState(state.currentInnings);
+      useEffect(() => { setViewInnNum(state.currentInnings); }, [state.currentInnings]);
+
+      const inn = viewInnNum === 1 ? state.innings1 : state.innings2;
+      if (!inn) return null;
+
       return (
         <div className="animate-fade-up">
           <h2 style={{marginBottom: '16px', textAlign: 'center'}}>Scorecard</h2>
+          
+          {state.innings2 && (
+             <div className="flex-row gap-3" style={{marginBottom: '16px'}}>
+               <button className={`flex-1 ${viewInnNum === 1 ? 'btn-primary' : 'action-btn'}`} onClick={() => setViewInnNum(1)}>1st Inn: {state.innings1.battingTeam}</button>
+               <button className={`flex-1 ${viewInnNum === 2 ? 'btn-primary' : 'action-btn'}`} onClick={() => setViewInnNum(2)}>2nd Inn: {state.innings2.battingTeam}</button>
+             </div>
+          )}
           
           <div className="glass-card" style={{padding: '12px'}}>
             <h3 className="text-green" style={{marginBottom: '12px'}}>{inn.battingTeam} Batting</h3>
@@ -548,7 +560,12 @@
     }
 
     function StatsTab({ state }) {
-      const inn = state.currentInnings === 1 ? state.innings1 : state.innings2;
+      const [viewInnNum, setViewInnNum] = useState(state.currentInnings);
+      useEffect(() => { setViewInnNum(state.currentInnings); }, [state.currentInnings]);
+
+      const inn = viewInnNum === 1 ? state.innings1 : state.innings2;
+      if (!inn) return null;
+
       const totalFours = inn.batters.reduce((acc, b) => acc + b.fours, 0);
       const totalSixes = inn.batters.reduce((acc, b) => acc + b.sixes, 0);
       const totalDots = inn.bowlers.reduce((acc, b) => acc + b.dots, 0);
@@ -559,6 +576,13 @@
       return (
         <div className="animate-fade-up">
            <h2 style={{marginBottom: '16px', textAlign: 'center'}}>Match Stats</h2>
+           
+           {state.innings2 && (
+             <div className="flex-row gap-3" style={{marginBottom: '16px'}}>
+               <button className={`flex-1 ${viewInnNum === 1 ? 'btn-primary' : 'action-btn'}`} onClick={() => setViewInnNum(1)}>1st Inn: {state.innings1.battingTeam}</button>
+               <button className={`flex-1 ${viewInnNum === 2 ? 'btn-primary' : 'action-btn'}`} onClick={() => setViewInnNum(2)}>2nd Inn: {state.innings2.battingTeam}</button>
+             </div>
+           )}
            
            <div className="glass-card">
               <h3 style={{marginBottom: '16px'}}>Team Stats ({inn.battingTeam})</h3>
