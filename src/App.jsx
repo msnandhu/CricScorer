@@ -772,7 +772,7 @@ import './index.css';
         
         setState(prev => {
           const currInnKey = prev.currentInnings === 1 ? 'innings1' : 'innings2';
-          const inn = structuredClone();
+          const inn = structuredClone(prev[currInnKey]);
           
           // Mark old batter out
           inn.batters[inn.currentStrikerIdx].dismissal = dismissalType;
@@ -825,7 +825,7 @@ import './index.css';
         
         setState(prev => {
           const currInnKey = prev.currentInnings === 1 ? 'innings1' : 'innings2';
-          const inn = structuredClone();
+          const inn = structuredClone(prev[currInnKey]);
           
           let bowlerIdx = inn.bowlers.findIndex(b => b.name.toLowerCase() === newBowler.toLowerCase());
           if (bowlerIdx === -1) {
@@ -874,7 +874,7 @@ import './index.css';
 
       const handleSave = () => {
          setState(prev => {
-            const next = structuredClone();
+            const next = structuredClone(prev);
             next[currInnKey].runs = parseInt(runs) || 0;
             next[currInnKey].wickets = parseInt(wickets) || 0;
             next[currInnKey].balls = parseInt(balls) || 0;
@@ -919,7 +919,7 @@ import './index.css';
       const handleSave = () => {
         if (!name) return;
         setState(prev => {
-          const next = structuredClone();
+          const next = structuredClone(prev);
           const tIdx = isStriker ? next[currInnKey].currentStrikerIdx : next[currInnKey].currentNonStrikerIdx;
           next[currInnKey].batters[tIdx] = { ...next[currInnKey].batters[tIdx], name, runs: parseInt(runs)||0, balls: parseInt(balls)||0, fours: parseInt(fours)||0, sixes: parseInt(sixes)||0 };
           next.ui.editBatter = false;
@@ -963,7 +963,7 @@ import './index.css';
       const handleSave = () => {
         if (!name) return;
         setState(prev => {
-          const next = structuredClone();
+          const next = structuredClone(prev);
           let bIdx = next[currInnKey].currentBowlerIdx;
           next[currInnKey].bowlers[bIdx] = { ...next[currInnKey].bowlers[bIdx], name, overs: parseInt(overs)/6 || 0, runs: parseInt(runs)||0, wickets: parseInt(wickets)||0 };
           next.ui.editBowler = false;
@@ -1002,7 +1002,7 @@ import './index.css';
 
       const handleSave = () => {
          setState(prev => {
-            const next = structuredClone();
+            const next = structuredClone(prev);
             if(next[currInnKey].timeline.length > 0) {
                next[currInnKey].timeline[lastOverIdx] = overStr.split(',').map(s => s.trim()).filter(Boolean);
             }
